@@ -18,12 +18,19 @@ class _DataDisplayScreenState extends State<DataDisplayScreen> {
     super.initState();
     // เรียกฟังก์ชันดึงข้อมูล *ครั้งเดียว* ใน initState
     futurePosts =
-        futurePosts = fetchPosts(); // สมมติว่า fetchPosts() ส่งคืน Future<List<Post>>
+        fetchPosts(); // สมมติว่า fetchPosts() ส่งคืน Future<List<Post>>
   }
 
   // ฟังก์ชันตัวอย่างสำหรับดึงข้อมูล (ควรอยู่ในไฟล์ service/repository แยกต่างหาก)
   Future<List<Post>> fetchPosts() async {
-    final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/posts'));
+    final response = await http.get(
+      Uri.parse('https://jsonplaceholder.typicode.com/posts'),
+      headers: {
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       List<dynamic> decodedList = jsonDecode(response.body) as List;
@@ -32,7 +39,8 @@ class _DataDisplayScreenState extends State<DataDisplayScreen> {
           .toList();
       return posts;
     } else {
-      throw Exception('Failed to load posts: ${response.statusCode}');
+      throw Exception(
+          'Failed to load posts: ${response.statusCode} ${response.reasonPhrase}');
     }
   }
 
@@ -53,7 +61,8 @@ class _DataDisplayScreenState extends State<DataDisplayScreen> {
               return Text('เกิดข้อผิดพลาด: ${snapshot.error}');
             } else if (snapshot.hasData) {
               // 3. หาก Future เสร็จสิ้นพร้อมข้อมูล: แสดงข้อมูล
-              final posts = snapshot.data!; // เข้าถึงข้อมูล (ใช้ ! เพราะเราเช็ค hasData แล้ว)
+              final posts = snapshot
+                  .data!; // เข้าถึงข้อมูล (ใช้ ! เพราะเราเช็ค hasData แล้ว)
 
               // แสดงข้อมูลใน ListView
               return ListView.builder(
@@ -63,7 +72,11 @@ class _DataDisplayScreenState extends State<DataDisplayScreen> {
                   return ListTile(
                     leading: CircleAvatar(child: Text(post.id.toString())),
                     title: Text(post.title),
-                    subtitle: Text(post.body, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(
+                      post.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   );
                 },
               );
@@ -76,5 +89,4 @@ class _DataDisplayScreenState extends State<DataDisplayScreen> {
       ),
     );
   }
-
 }
